@@ -1,4 +1,5 @@
 import React from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function TreeCanvas({ root }) {
   const nodes = [];
@@ -8,36 +9,81 @@ export default function TreeCanvas({ root }) {
   return (
     <div className="tree-wrapper">
       <svg width="100%" height="500" className="tree-svg">
-        {/* linhas conectando nós */}
-        {edges.map((e, i) => (
-          <line key={i} x1={e.x1} y1={e.y1} x2={e.x2} y2={e.y2} className="edge" />
-        ))}
+        <defs>
+          <linearGradient id="edge-gradient" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#00ffff" />
+            <stop offset="100%" stopColor="#00ffcc" />
+          </linearGradient>
+        </defs>
 
-        {/* nós */}
-        {nodes.map((node, i) => (
-          <g key={i} className="node">
-            <rect
-              x={node.x - node.width / 2}
-              y={node.y - 18}
-              width={node.width}
-              height="36"
-              rx="8"
-              ry="8"
-              fill="white"
-              stroke="#2563eb"
+        {/* linhas conectando nós */}
+        <AnimatePresence>
+          {edges.map((e, i) => (
+            <motion.line
+              key={i}
+              x1={e.x1}
+              y1={e.y1}
+              x2={e.x2}
+              y2={e.y2}
+              stroke="url(#edge-gradient)"
+              strokeWidth="2"
+              initial={{ pathLength: 0 }}
+              animate={{ pathLength: 1 }}
+              transition={{ duration: 0.4 }}
             />
-            {node.keys.map((k, j) => (
-              <text
-                key={j}
-                x={node.x - node.width / 2 + 24 * (j + 0.5)}
-                y={node.y + 4}
-                textAnchor="middle"
-              >
-                {k}
-              </text>
-            ))}
-          </g>
-        ))}
+          ))}
+        </AnimatePresence>
+
+        {/* nós com animações */}
+        <AnimatePresence>
+          {nodes.map((node, i) => (
+            <motion.g
+              key={i}
+              initial={{ scale: 0.7, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.6, opacity: 0, filter: "brightness(4)" }}
+              transition={{ duration: 0.6 }}
+            >
+              <motion.rect
+                x={node.x - node.width / 2}
+                y={node.y - 18}
+                width={node.width}
+                height="36"
+                rx="10"
+                ry="10"
+                fill="#0f172a"
+                stroke="#00ffff"
+                strokeWidth="2"
+                filter="drop-shadow(0 0 8px #00ffff80)"
+                animate={{
+                  boxShadow: [
+                    "0 0 8px #00ffff80",
+                    "0 0 14px #00ffff",
+                    "0 0 8px #00ffff80",
+                  ],
+                }}
+                transition={{ repeat: 0, duration: 0.8 }}
+              />
+              {node.keys.map((k, j) => (
+                <text
+                  key={j}
+                  x={node.x - node.width / 2 + 24 * (j + 0.5)}
+                  y={node.y + 5}
+                  textAnchor="middle"
+                  fontSize="14"
+                  fontWeight="600"
+                  fill="#00eaff"
+                  style={{
+                    textShadow: "0 0 8px #00eaff",
+                    fontFamily: "Consolas, monospace",
+                  }}
+                >
+                  {k}
+                </text>
+              ))}
+            </motion.g>
+          ))}
+        </AnimatePresence>
       </svg>
     </div>
   );
@@ -46,7 +92,7 @@ export default function TreeCanvas({ root }) {
 function layoutTree(node, depth, xStart, width, nodes, edges, parent = null) {
   if (!node) return;
   const x = xStart + width / 2;
-  const y = depth * 100 + 50;
+  const y = depth * 100 + 60;
   const nodeWidth = Math.max(40, node.keys.length * 24 + 10);
   nodes.push({ x, y, width: nodeWidth, keys: node.keys });
 

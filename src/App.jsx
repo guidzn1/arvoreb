@@ -4,6 +4,17 @@ import { TreeB } from "./structures/TreeB";
 import { TreeBPlus } from "./structures/TreeBPlus";
 import toast, { Toaster } from "react-hot-toast";
 import TreeCanvas from "./components/TreeCanvas";
+import { Plus, RotateCcw, Layers, Trash2 } from "lucide-react";
+
+// Função auxiliar para verificar duplicatas
+function existsInTree(node, val) {
+  if (!node) return false;
+  if (node.keys.includes(val)) return true;
+  for (const child of node.children || []) {
+    if (existsInTree(child, val)) return true;
+  }
+  return false;
+}
 
 export default function App() {
   const [treeType, setTreeType] = useState("B");
@@ -17,54 +28,91 @@ export default function App() {
     return copy;
   };
 
+  // Inserção com verificação de duplicata
   const handleInsert = () => {
     if (!inputVal.trim()) return toast.error("Digite um número!");
     const val = Number(inputVal);
+    if (existsInTree(tree.root, val)) {
+      toast.error(`⚠️ O valor ${val} já existe na árvore!`);
+      return;
+    }
     const t = cloneTree(tree);
     t.insert(val);
     setTree(t);
     setInputVal("");
-    toast.success(`Inserido ${val}`);
+    toast.success(`🌱 Inserido ${val}`);
   };
 
+  // Exclusão
+  const handleRemove = () => {
+    if (!inputVal.trim()) return toast.error("Digite o número a excluir!");
+    const val = Number(inputVal);
+    if (!existsInTree(tree.root, val)) {
+      toast.error(`❌ Valor ${val} não encontrado!`);
+      return;
+    }
+    const t = cloneTree(tree);
+    t.remove(val);
+    setTree(t);
+    setInputVal("");
+    toast(`Removido ${val}`, { icon: "🗑️" });
+  };
+
+  // Reset
   const handleReset = () => {
     setTree(treeType === "B" ? new TreeB() : new TreeBPlus());
-    toast("Árvore resetada 🌿");
+    toast("Árvore resetada 🔄");
+  };
+
+  // Alternar tipo de árvore
+  const handleSwitch = () => {
+    const newType = treeType === "B" ? "B+" : "B";
+    setTreeType(newType);
+    setTree(newType === "B" ? new TreeB() : new TreeBPlus());
+    toast(`Alternado para Árvore ${newType} 🌈`);
   };
 
   return (
     <>
-      <nav className="navbar">Visualizador de Árvore {treeType}</nav>
+      <nav className="navbar">
+        <Layers size={18} /> <span>Visualizador de Árvore {treeType}</span>
+      </nav>
+
       <div className="container">
         <Toaster position="top-center" />
-        <h1>Árvore {treeType === "B" ? "B" : "B+"}</h1>
+        <h1>
+          {treeType === "B" ? "🌳 Árvore B" : "🌲 Árvore B+"}
+        </h1>
 
         <div className="controls">
           <input
             type="number"
-            placeholder="Valor"
+            placeholder="Digite um valor..."
             value={inputVal}
             onChange={(e) => setInputVal(e.target.value)}
           />
-          <button onClick={handleInsert}>Inserir</button>
-          <button onClick={handleReset} className="ghost">
-            Resetar
+
+          <button onClick={handleInsert} className="insert">
+            <Plus size={18} /> Inserir
           </button>
-          <button
-            onClick={() => {
-              const newType = treeType === "B" ? "B+" : "B";
-              setTreeType(newType);
-              setTree(newType === "B" ? new TreeB() : new TreeBPlus());
-              toast(`Alternado para Árvore ${newType}`);
-            }}
-            className="ghost"
-          >
-            Alternar
+
+          <button onClick={handleRemove} className="remove">
+            <Trash2 size={18} /> Excluir
+          </button>
+
+          <button onClick={handleReset} className="ghost">
+            <RotateCcw size={18} /> Resetar
+          </button>
+
+          <button onClick={handleSwitch} className="switch">
+            <Layers size={18} /> Alternar para{" "}
+            {treeType === "B" ? "B+" : "B"}
           </button>
         </div>
 
         <TreeCanvas root={tree.root} />
-        <footer>Desenvolvido para estudos de Estruturas de Dados II 🌱</footer>
+
+        <footer>🌌 Desenvolvido para estudos de Estruturas de Dados II</footer>
       </div>
     </>
   );
